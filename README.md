@@ -23,6 +23,7 @@ The api uses thymeleaf to render an email, you can use simple variables inside y
 ## Todo:
 - [x] API now can send simple emails
 - [x] API now can send html emails
+- [ ] OpenAPI spec & Swagger
 - [ ] Create docker image and publish to hub
 - [ ] Create a better readme
 - [ ] Create CI/CD pipeline
