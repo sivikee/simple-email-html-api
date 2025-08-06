@@ -63,7 +63,7 @@ Returns the rendered HTML of the provided template + data, without sending the e
 
 You can trigger simple emails using form parameters:
 
-### Endpoint: `POST /api/email/webhook`
+### Endpoint: `GET /api/email/send`
 
 **Parameters:**
 - `to`
