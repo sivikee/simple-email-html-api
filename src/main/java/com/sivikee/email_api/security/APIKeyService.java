@@ -17,6 +17,14 @@ public class APIKeyService {
             throw new BadCredentialsException("Invalid API Key");
         }
 
+        return getAuthenticationFromKey(apiKey);
+    }
+
+    public Authentication getAuthenticationFromKey(String apiKey) {
+        if (apiKey == null || !apiKey.equals(key)) {
+            throw new BadCredentialsException("Invalid API Key");
+        }
+
         return new ApiKeyAuthentication(apiKey, AuthorityUtils.NO_AUTHORITIES);
     }
 }

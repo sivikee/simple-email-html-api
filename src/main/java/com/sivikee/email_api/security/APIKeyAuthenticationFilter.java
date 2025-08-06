@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 @RequiredArgsConstructor
 @Component
+
 public class APIKeyAuthenticationFilter extends GenericFilterBean {
 
     private final APIKeyService apiKeyService;
@@ -24,17 +25,31 @@ public class APIKeyAuthenticationFilter extends GenericFilterBean {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain)
             throws IOException, ServletException {
+        HttpServletRequest httpRequest = (HttpServletRequest) request;
+        HttpServletResponse httpResponse = (HttpServletResponse) response;
+
         try {
-            Authentication authentication = apiKeyService.getAuthentication((HttpServletRequest) request);
+            String method = httpRequest.getMethod();
+            String apiKeyParam = httpRequest.getParameter("apiKey");
+
+            Authentication authentication = null;
+
+            // Accept API key from query param if GET request
+            if ("GET".equalsIgnoreCase(method) && apiKeyParam != null) {
+                authentication = apiKeyService.getAuthenticationFromKey(apiKeyParam);
+            } else {
+                authentication = apiKeyService.getAuthentication(httpRequest);
+            }
+
             SecurityContextHolder.getContext().setAuthentication(authentication);
         } catch (Exception exp) {
-            HttpServletResponse httpResponse = (HttpServletResponse) response;
             httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             httpResponse.setContentType(MediaType.APPLICATION_JSON_VALUE);
             PrintWriter writer = httpResponse.getWriter();
             writer.print(exp.getMessage());
             writer.flush();
             writer.close();
+            return; // Prevents further filter processing after failed auth
         }
 
         filterChain.doFilter(request, response);

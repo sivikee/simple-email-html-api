@@ -6,10 +6,7 @@ import com.sivikee.email_api.service.EmailService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController()
 @RequiredArgsConstructor
@@ -27,4 +24,11 @@ public class EmailController {
     public ResponseEntity<String> render(@RequestBody @Valid EmailRequest request) {
         return ResponseEntity.ok(emailService.generateTemplate(request));
     }
+
+    @GetMapping("/send")
+    public ResponseEntity<EmailResult> sendEmailWebhook(@RequestParam String to, @RequestParam String subject, @RequestParam String body) {
+        EmailResult result =  emailService.sendEmail(EmailRequest.builder().to(to).body(body).subject(subject).build());
+        return ResponseEntity.status(result.getHttpStatus()).body(result);
+    }
+
 }
