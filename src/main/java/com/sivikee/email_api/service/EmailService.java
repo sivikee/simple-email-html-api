@@ -19,11 +19,15 @@ import org.thymeleaf.exceptions.TemplateInputException;
 import java.io.FileNotFoundException;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class EmailService {
+
+    /** Allows only simple filename characters — no path separators or traversal sequences. */
+    private static final Pattern SAFE_TEMPLATE_NAME = Pattern.compile("^[a-zA-Z0-9_\\-]+$");
 
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
@@ -81,17 +85,13 @@ public class EmailService {
             return EmailResult.builder()
                     .message("Email sent successfully")
                     .status("SUCCESS")
-                    .httpStatus(HttpStatus.OK)
                     .build();
 
         } catch (EmailSendException e) {
             throw e;
         } catch (Exception e) {
-            return EmailResult.builder()
-                    .message(e.getMessage())
-                    .status("FAILED")
-                    .httpStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .build();
+            log.error("Failed to send email to {}: {}", request.getTo(), e.getMessage(), e);
+            throw new EmailSendException("Mail server error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -100,29 +100,35 @@ public class EmailService {
      *
      * @param request email request containing the template name and data map
      * @return rendered HTML string
-     * @throws EmailSendException if the template is not found or cannot be processed
+     * @throws EmailSendException if the template name is unsafe, not found, or cannot be processed
      */
     public String generateTemplate(EmailRequest request) {
+        String templateName = request.getTemplate();
+        if (!SAFE_TEMPLATE_NAME.matcher(templateName).matches()) {
+            throw new EmailSendException(
+                    "Invalid template name '" + templateName + "'. Only letters, numbers, hyphens and underscores are allowed.",
+                    HttpStatus.BAD_REQUEST);
+        }
+
         Context context = new Context();
         if (request.getData() != null) {
             request.getData().forEach(context::setVariable);
         }
         try {
-            return this.templateEngine.process(request.getTemplate(), context);
+            return this.templateEngine.process(templateName, context);
         } catch (TemplateInputException e) {
             if (e.getCause() instanceof FileNotFoundException) {
                 throw new EmailSendException(
-                        String.format("Template file not found: %s", request.getTemplate()),
+                        String.format("Template file not found: %s", templateName),
                         HttpStatus.BAD_REQUEST);
             }
             throw new EmailSendException(
-                    String.format("Error processing template: %s", request.getTemplate()),
+                    String.format("Error processing template: %s", templateName),
                     HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             throw new EmailSendException(
-                    String.format("Template not found or invalid: %s", request.getTemplate()),
+                    String.format("Template not found or invalid: %s", templateName),
                     HttpStatus.BAD_REQUEST);
         }
     }
 }
-

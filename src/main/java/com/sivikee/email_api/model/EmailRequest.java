@@ -3,7 +3,6 @@ package com.sivikee.email_api.model;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 
@@ -15,7 +14,7 @@ import java.util.Map;
 public class EmailRequest {
 
     @Email
-    @NotNull
+    @NotBlank
     @Schema(description = "Recipient email address", example = "recipient@example.com", requiredMode = Schema.RequiredMode.REQUIRED)
     private String to;
 

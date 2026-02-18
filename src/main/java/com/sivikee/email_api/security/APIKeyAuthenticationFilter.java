@@ -46,7 +46,7 @@ public class APIKeyAuthenticationFilter extends GenericFilterBean {
             httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             httpResponse.setContentType(MediaType.APPLICATION_JSON_VALUE);
             PrintWriter writer = httpResponse.getWriter();
-            writer.print(exp.getMessage());
+            writer.print("{\"error\":\"Unauthorized\",\"message\":\"" + exp.getMessage() + "\"}");
             writer.flush();
             writer.close();
             return; // Prevents further filter processing after failed auth

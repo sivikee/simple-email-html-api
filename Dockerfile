@@ -9,7 +9,7 @@ COPY build.gradle settings.gradle ./
 COPY gradle ./gradle
 
 # Download dependencies
-RUN gradle build -x test --no-daemon || true
+RUN gradle build -x test --no-daemon
 
 # Copy full source and build
 COPY . .

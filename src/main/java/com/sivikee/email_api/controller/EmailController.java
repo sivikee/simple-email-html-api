@@ -13,9 +13,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,6 +26,7 @@ import java.util.List;
 
 @RestController()
 @RequiredArgsConstructor
+@Validated
 @RequestMapping("api/email")
 @Tag(name = "Email", description = "Endpoints for sending and previewing emails")
 @SecurityRequirement(name = "ApiKeyAuth")
@@ -46,8 +50,7 @@ public class EmailController {
             }
     )
     public ResponseEntity<EmailResult> sendEmail(@RequestBody @Valid EmailRequest request) {
-        EmailResult result = emailService.sendEmail(request);
-        return ResponseEntity.status(result.getHttpStatus()).body(result);
+        return ResponseEntity.ok(emailService.sendEmail(request));
     }
 
     @PostMapping(value = "/attach", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -70,8 +73,7 @@ public class EmailController {
             @RequestPart("request") @Valid EmailRequest request,
             @RequestPart(value = "files", required = false)
             @Parameter(description = "Files to attach to the email") List<MultipartFile> files) {
-        EmailResult result = emailService.sendEmailWithAttachments(request, files);
-        return ResponseEntity.status(result.getHttpStatus()).body(result);
+        return ResponseEntity.ok(emailService.sendEmailWithAttachments(request, files));
     }
 
     @PostMapping("/render")
@@ -104,11 +106,13 @@ public class EmailController {
             }
     )
     public ResponseEntity<EmailResult> sendEmailWebhook(
-            @RequestParam @Parameter(description = "Recipient email address", example = "recipient@example.com") String to,
-            @RequestParam @Parameter(description = "Email subject", example = "Hello!") String subject,
-            @RequestParam @Parameter(description = "Plain-text email body", example = "This is a webhook email.") String body) {
-        EmailResult result = emailService.sendEmail(EmailRequest.builder().to(to).body(body).subject(subject).build());
-        return ResponseEntity.status(result.getHttpStatus()).body(result);
+            @RequestParam @Email @NotBlank
+            @Parameter(description = "Recipient email address", example = "recipient@example.com") String to,
+            @RequestParam @NotBlank
+            @Parameter(description = "Email subject", example = "Hello!") String subject,
+            @RequestParam @NotBlank
+            @Parameter(description = "Plain-text email body", example = "This is a webhook email.") String body) {
+        return ResponseEntity.ok(emailService.sendEmail(EmailRequest.builder().to(to).body(body).subject(subject).build()));
     }
 }
 

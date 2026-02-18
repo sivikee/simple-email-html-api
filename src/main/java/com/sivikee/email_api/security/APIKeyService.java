@@ -7,24 +7,35 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+
 @Component
 public class APIKeyService {
     @Value("${api.key}")
     private String key;
     public Authentication getAuthentication(HttpServletRequest request) {
         String apiKey = request.getHeader("X-API-KEY");
-        if (apiKey == null || !apiKey.equals(key)) {
-            throw new BadCredentialsException("Invalid API Key");
-        }
-
         return getAuthenticationFromKey(apiKey);
     }
 
     public Authentication getAuthenticationFromKey(String apiKey) {
-        if (apiKey == null || !apiKey.equals(key)) {
+        if (!isValidKey(apiKey)) {
             throw new BadCredentialsException("Invalid API Key");
         }
-
         return new ApiKeyAuthentication(apiKey, AuthorityUtils.NO_AUTHORITIES);
+    }
+
+    /**
+     * Constant-time equality check to prevent timing attacks.
+     */
+    private boolean isValidKey(String apiKey) {
+        if (apiKey == null) {
+            return false;
+        }
+        return MessageDigest.isEqual(
+                apiKey.getBytes(StandardCharsets.UTF_8),
+                key.getBytes(StandardCharsets.UTF_8)
+        );
     }
 }

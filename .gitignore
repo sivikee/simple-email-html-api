@@ -37,3 +37,6 @@ out/
 .vscode/
 
 application-dev.properties
+
+### Secrets ###
+.env

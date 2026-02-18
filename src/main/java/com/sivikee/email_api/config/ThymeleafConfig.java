@@ -18,6 +18,9 @@ public class ThymeleafConfig implements WebMvcConfigurer {
 
     @Value("${api.template-dir}")
     private String thymeleafPrefix;
+
+    @Value("${api.template-cache-enabled:true}")
+    private boolean templateCacheEnabled;
     @PostConstruct
     public void createTemplatesDirectory() {
         String directoryPath = thymeleafPrefix.replace("file:", "");
@@ -34,7 +37,7 @@ public class ThymeleafConfig implements WebMvcConfigurer {
         FileTemplateResolver resolver = new FileTemplateResolver();
 
         resolver.setPrefix(thymeleafPrefix);
-        resolver.setCacheable(false);
+        resolver.setCacheable(templateCacheEnabled);
         resolver.setSuffix(".html");
         resolver.setTemplateMode("HTML");
         resolver.setCharacterEncoding("UTF-8");
